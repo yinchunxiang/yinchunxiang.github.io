@@ -58,7 +58,40 @@ set path += /path/to/file
 </div>
 <div class="entry" id="main">
 <!-- content -->
+<h2 id="gf">gf介绍</h2>
 
+<p>在vim中，当你的光标移动到某个文件名上的时候，按下<code>gf</code>命令就能直接跳转打开这个文件，非常方便:) 
+前提是这个文件在你的vim的路径上。</p>
+
+<h2 id="">检查文件</h2>
+
+<p>如果你执行<code>gf</code>命令的时候出现如下的错误，表明这个文件不在vim的路径中，无法找到</p>
+
+<pre><code> E447: Can't find file "xxx" in path
+</code></pre>
+
+<p>所以在你不确定文件是否在vim的搜索路径中的时候，你可以使用<code>:find file.name</code>来检查是否可以找到文件。
+如果找不到说明文件不在你的搜索路径中。</p>
+
+<p>另外，你可以只用<code>:checkpath</code>命令来查看哪些文件是你include了，但是却找不到的</p>
+
+<pre><code class="cpp">--- Included files not found in path ---
+index_manager.h --&gt;
+  "defs.h"
+</code></pre>
+
+<h2 id="">设置路径</h2>
+
+<p>对于那些没有找到的文件，你需要做的是找到文件所在的目录，然后将这个目录加入到vim的搜索路径中</p>
+
+<pre><code>set path += /path/to/file
+</code></pre>
+
+<p>更多路径的设置方法可以通过<code>:help path</code>命令查看，设置完成之后你就可以使用gf命令来进行跳转了。</p>
+
+<blockquote>
+  <p>path选项定义了一个目录列表，在使用gf，find，以及CTRL-W f等vim命令时，如果使用的是相对路径，那么就会在path选项定义的目录列表中查找相应的文件 </p>
+</blockquote>
 <!-- content end -->
 </div>
 <br>
