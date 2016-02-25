@@ -1,0 +1,203 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="Keywords" content="blog"/>
+    <meta name="Description" content="blog"/>
+    <title>Simple</title>
+    <link rel="shortcut icon" href="/static/favicon.png"/>
+    <link rel="stylesheet" type="text/css" href="/main.css" />
+</head>
+<body>
+<div class="main">
+    <div class="header">
+    	<ul id="pages">
+            <li><a href="/">home</a></li>
+            <li><a href="/#/tags">tags</a></li>
+            <li><a href="/#/archive">archive</a></li>
+    	</ul>
+    </div>
+	<div class="wrap-header">
+	<h1>
+    <a href="/" id="title"></a>
+	</h1>
+	</div>
+<div id="md" style="display: none;">
+<!-- markdown -->
+##问题描述
+今天在用wget从另外1台机器下载文件的时候发现缺少了一些目录。
+.listing文件列出的文件个数如下：
+<span class="loading">upload image now!</span>
+真正下载的为文件列表如下，缺少了上图红色标出的部分：
+
+ ![](http://yinchunxiang.github.io/img/download_file_list.JPG)
+
+##分析问题
+在发现问题之后就想知道什么原因导致的，然后就查看man，看到了`--no-remove-listing`参数，用来列出目录下的文件。
+增加参数之后，返现在.listing文件里是有那些目录的，但是就是没有下载下来。
+
+继续查看man，发现了`--debug`参数，用来打印详细的错误信息，然后就加上，得到如下的一些错误信息。
+```bash
+Unrecognized permissions for hadoop_and_hive_yq/java6/jre/lib/amd64.
+Unrecognized permissions for hadoop_and_hive_yq/java6/jre/lib/applet.
+Unrecognized permissions for hadoop_and_hive_yq/java6/jre/lib/audio.
+
+```
+然后就以为是这个问题，然后网上又搜索，得到如下代码，觉得不像是这个问题引起的。
+```c
+if (f->perms && f->type == FT_PLAINFILE && dlthis)
+{    
+	if (opt.preserve_perm)
+		chmod (con->target, f->perms);
+}    
+else 
+	DEBUGP (("Unrecognized permissions for %s.\n", con->target))
+```
+继续看错误日志，发现有挺多别的目录也有这个错误，但是那些目录下载下来了。
+```bash
+Unrecognized permissions for hadoop_and_hive_yq/hadoop.
+Unrecognized permissions for hadoop_and_hive_yq/hive.
+Unrecognized permissions for hadoop_and_hive_yq/java6.
+Unrecognized permissions for hadoop_and_hive_yq/java6.bak.
+```
+
+继续看日志，看着看着，发现了如下的错误日志，怀疑是不是超过目录深度了。
+```bash
+Unrecognized permissions for hadoop_and_hive_yq/java6/jre/lib/zi.
+Will not retrieve dirs since depth is 5 (max 5).
+```
+于是给命令加上了`--level=30`，然后就下载成功了。
+
+##总结
+在查找问题的时候要注意 **先全局看下问题和错误** , 而不是看到第一个错误提示就以为是那个引起的，然后一头扎下去验证。刚开始就是以为问题是“Unrecognize permissions"这个错误提示引起的，然后网上各种搜索找答案没找到，又去看源码发现也不像，浪费了3-4个小时。
+
+后续在看到“Will not retrieve dirs since depth is 5 (max 5)”错误提示，加上`--level=30`就迅速解决了问题。
+<!-- markdown end -->
+</div>
+<div class="entry" id="main">
+<!-- content -->
+<h2 id="">问题描述</h2>
+
+<p>今天在用wget从另外1台机器下载文件的时候发现缺少了一些目录。
+.listing文件列出的文件个数如下：
+<span class="loading">upload image now!</span>
+真正下载的为文件列表如下，缺少了上图红色标出的部分：</p>
+
+<p><img src="http://yinchunxiang.github.io/img/download_file_list.JPG" alt="" title=""></p>
+
+<h2 id="">分析问题</h2>
+
+<p>在发现问题之后就想知道什么原因导致的，然后就查看man，看到了<code>--no-remove-listing</code>参数，用来列出目录下的文件。
+增加参数之后，返现在.listing文件里是有那些目录的，但是就是没有下载下来。</p>
+
+<p>继续查看man，发现了<code>--debug</code>参数，用来打印详细的错误信息，然后就加上，得到如下的一些错误信息。</p>
+
+<pre><code class="bash">Unrecognized permissions for hadoop_and_hive_yq/java6/jre/lib/amd64.
+Unrecognized permissions for hadoop_and_hive_yq/java6/jre/lib/applet.
+Unrecognized permissions for hadoop_and_hive_yq/java6/jre/lib/audio.
+</code></pre>
+
+<p>然后就以为是这个问题，然后网上又搜索，得到如下代码，觉得不像是这个问题引起的。</p>
+
+<pre><code class="c">if (f-&gt;perms &amp;&amp; f-&gt;type == FT_PLAINFILE &amp;&amp; dlthis)
+{    
+    if (opt.preserve_perm)
+        chmod (con-&gt;target, f-&gt;perms);
+}    
+else 
+    DEBUGP (("Unrecognized permissions for %s.\n", con-&gt;target))
+</code></pre>
+
+<p>继续看错误日志，发现有挺多别的目录也有这个错误，但是那些目录下载下来了。</p>
+
+<pre><code class="bash">Unrecognized permissions for hadoop_and_hive_yq/hadoop.
+Unrecognized permissions for hadoop_and_hive_yq/hive.
+Unrecognized permissions for hadoop_and_hive_yq/java6.
+Unrecognized permissions for hadoop_and_hive_yq/java6.bak.
+</code></pre>
+
+<p>继续看日志，看着看着，发现了如下的错误日志，怀疑是不是超过目录深度了。</p>
+
+<pre><code class="bash">Unrecognized permissions for hadoop_and_hive_yq/java6/jre/lib/zi.
+Will not retrieve dirs since depth is 5 (max 5).
+</code></pre>
+
+<p>于是给命令加上了<code>--level=30</code>，然后就下载成功了。</p>
+
+<h2 id="">总结</h2>
+
+<p>在查找问题的时候要注意 <strong>先全局看下问题和错误</strong> , 而不是看到第一个错误提示就以为是那个引起的，然后一头扎下去验证。刚开始就是以为问题是“Unrecognize permissions"这个错误提示引起的，然后网上各种搜索找答案没找到，又去看源码发现也不像，浪费了3-4个小时。</p>
+
+<p>后续在看到“Will not retrieve dirs since depth is 5 (max 5)”错误提示，加上<code>--level=30</code>就迅速解决了问题。</p>
+<!-- content end -->
+</div>
+<br>
+<br>
+    <div id="disqus_thread"></div>
+	<div class="footer">
+		<p>© Copyright 2014 by isnowfy, Designed by isnowfy</p>
+	</div>
+</div>
+<script src="main.js"></script>
+<script id="content" type="text/mustache">
+    <h1>{{title}}</h1>
+    <div class="tag">
+    {{date}}
+    {{#tags}}
+    <a href="/#/tag/{{name}}">#{{name}}</a>
+    {{/tags}}
+    </div>
+</script>
+<script id="pagesTemplate" type="text/mustache">
+    {{#pages}}
+    <li>
+        <a href="{{path}}">{{title}}</a>
+    </li>
+    {{/pages}}
+</script>
+<script>
+$(document).ready(function() {
+    $.ajax({
+        url: "main.json",
+        type: "GET",
+        dataType: "json",
+        success: function(data) {
+            $("#title").html(data.name);
+            var pagesTemplate = Hogan.compile($("#pagesTemplate").html());
+            var pagesHtml = pagesTemplate.render({"pages": data.pages});
+            $("#pages").append(pagesHtml);
+            //path
+            var path = "wget.html";
+            //path end
+            var now = 0;
+            for (var i = 0; i < data.posts.length; ++i)
+                if (path == data.posts[i].path)
+                    now = i;
+            var post = data.posts[now];
+            var tmp = post.tags.split(" ");
+            var tags = [];
+            for (var i = 0; i < tmp.length; ++i)
+                if (tmp[i].length > 0)
+                    tags.push({"name": tmp[i]});
+            var contentTemplate = Hogan.compile($("#content").html());
+            var contentHtml = contentTemplate.render({"title": post.title, "tags": tags, "date": post.date});
+            $("#main").prepend(contentHtml);
+            if (data.disqus_shortname.length > 0) {
+                var disqus_shortname = data.disqus_shortname;
+                (function() {
+                    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+                    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+            }
+        }
+    });
+});
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ["\\(", "\\)"]], processEscapes: true}});
+</script>
+</body>
+</html>
